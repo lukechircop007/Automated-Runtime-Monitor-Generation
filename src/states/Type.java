@@ -1,0 +1,11 @@
+package states;
+
+public enum Type {
+	ENTER,
+	EXIT,
+	EXITWITHNUM,
+	EXITWITHCOND,
+	EXITWITHNUMANDCOND,
+	OBJECT,
+	CLASS
+}

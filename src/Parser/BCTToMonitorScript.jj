@@ -1,0 +1,75 @@
+options{  static = true;}PARSER_BEGIN(BctToMonitorScript)package Parser;
+import java.io.File;import monitorGeneration.*;
+import java.io.FileInputStream;import java.util.ArrayList;import java.util.HashMap;import states.*;
+
+public class BctToMonitorScript{  public static void main(String args []) throws ParseException  {	  	boolean generateEvents = true;	  	boolean generateObjects = false;	  	boolean generateClasses = false;	  	String pathToBCT = "";	  	String pathToSource = "./Source";	  	String pathToGenerateMonitor = "./Monitor";	  		  		  	if(args.length <4){	  		System.out.println("Arguments required, Please type help");	  	}else{	  		for(int i = 0 ; i < args.length; i++){	  			if(args[i].equals("-e")){	  				generateEvents = false;	  				System.out.println("Event generation disabled!");	  			}else if(args[i].equals("-c")){	  				generateClasses = true;	  				System.out.println("Class generation enabled!");	  					  			}else if(args[i].equals("-o")){	  				generateObjects = false;	  				System.out.println("Object generation enabled!");	  					  			}else if(args[i].equals("-s")){	  				if(args.length > (i+1) && (new File(args[i+1])).exists()){	  					pathToSource = args[i+1];	  					i++;	  				}else {	  					System.out.println("Source path invalid!");	  					System.exit(0);	  				}	  			}else if(args[i].equals("-m")){	  				if(args.length > (i+1) && (new File(args[i+1])).exists()){	  					pathToGenerateMonitor = args[i+1];	  					i++;	  				}else {	  					System.out.println("Path to generate monitors invalid!");	  					System.exit(0);	  				}	  					  			}else if(args[i].equals("-b")){	  				if(args.length > (i+1) && (new File(args[i+1])).exists()){	  					pathToBCT = args[i+1];	  					i++;	  				}else {	  					System.out.println("Path to BCT invalid!");	  					System.exit(0);	  				}	  					  			}	  		}	  		try {				InvariantMain invMain = new InvariantMain();                System.out.println("Parsing Models: ");                System.setIn(new FileInputStream(pathToBCT+"/BctAnalysis/BCT/BCT_DATA/BCT/Models/ioInvariants/ioModelsExit.idx"));                new BctToMonitorScript(System.in);                HashMap< String, EventInvariant > exitModels = BctToMonitorScript.parse_models();                System.setIn(new FileInputStream(pathToBCT+"/BctAnalysis/BCT/BCT_DATA/BCT/Models/ioInvariants/ioModelsEnter.idx"));                BctToMonitorScript.ReInit(System.in);                HashMap< String, EventInvariant > enterModels = BctToMonitorScript.parse_models();                System.out.println("Finished parsing Models successfully!");                System.out.println("Parsing Invariants: ");                //loop through exit and entry models                for(String id: exitModels.keySet()){                	System.setIn(new FileInputStream(pathToBCT+"/BctAnalysis/BCT/BCT_DATA/BCT/Models/ioInvariants/"+id+".io.exit"));                    BctToMonitorScript.ReInit(System.in);                    invMain.addNewEventInvariant(BctToMonitorScript.parse_invariants(exitModels.get(id)));                }                                //loop through exit and entry models                for(String id: enterModels.keySet()){                	System.setIn(new FileInputStream(pathToBCT+"/BctAnalysis/BCT/BCT_DATA/BCT/Models/ioInvariants/"+id+".io.enter"));                    BctToMonitorScript.ReInit(System.in);                    invMain.addNewEventInvariant(BctToMonitorScript.parse_invariants(enterModels.get(id)));                }                                System.out.println("Finished parsing Invariants successfully!");                System.out.println("Starting monitor generation");				//System.out.println(invMain.toString());                MonitorGeneratorMain mainGen = new MonitorGeneratorMain();                mainGen.setLocationToPrintMonitors(pathToGenerateMonitor);                mainGen.generateMonitors(generateClasses, generateObjects, generateEvents,pathToSource, invMain);                System.out.println("Finished monitor generation");	  		}catch(Exception e){          		e.printStackTrace();        	}	  	}    
+//		if(args.length < 3) {
+//                System.out.println("Please provide the path to the BCT models");
+//                System.exit(0);
+//        }
+//        try{
+//          		InvariantMain invMain = new InvariantMain();
+//                System.out.println("Parsing Models: ");
+//                System.setIn(new FileInputStream(args[0]+"/BctAnalysis/BCT/BCT_DATA/BCT/Models/ioInvariants/ioModelsExit.idx"));
+//                new BctToMonitorScript(System.in);
+//                HashMap< String, EventInvariant > exitModels = BctToMonitorScript.parse_models();
+//
+//                System.setIn(new FileInputStream(args[0]+"/BctAnalysis/BCT/BCT_DATA/BCT/Models/ioInvariants/ioModelsEnter.idx"));
+//                BctToMonitorScript.ReInit(System.in);
+//                HashMap< String, EventInvariant > enterModels = BctToMonitorScript.parse_models();
+//                System.out.println("Finished parsing Models successfully!");
+//
+//                System.out.println("Parsing Invariants: ");
+//                //loop through exit and entry models
+//                for(String id: exitModels.keySet()){
+//                	System.setIn(new FileInputStream(args[0]+"/BctAnalysis/BCT/BCT_DATA/BCT/Models/ioInvariants/"+id+".io.exit"));
+//                    BctToMonitorScript.ReInit(System.in);
+//                    invMain.addNewEventInvariant(BctToMonitorScript.parse_invariants(exitModels.get(id)));
+//                }
+//                
+//                //loop through exit and entry models
+//                for(String id: enterModels.keySet()){
+//                	System.setIn(new FileInputStream(args[0]+"/BctAnalysis/BCT/BCT_DATA/BCT/Models/ioInvariants/"+id+".io.enter"));
+//                    BctToMonitorScript.ReInit(System.in);
+//                    invMain.addNewEventInvariant(BctToMonitorScript.parse_invariants(enterModels.get(id)));
+//                }
+//                
+//                System.out.println("Finished parsing Invariants successfully!");
+//
+//                System.out.println("Starting monitor generation");
+//				//System.out.println(invMain.toString());
+//                MonitorGeneratorMain mainGen = new MonitorGeneratorMain();
+//                mainGen.setLocationToPrintMonitors(args[1]);
+//                mainGen.generateMonitors(args[2], invMain);
+//                System.out.println("Finished monitor generation");
+//        }catch(Exception e){
+//          e.printStackTrace();
+//        }
+//        System.exit(0);
+  }}PARSER_END(BctToMonitorScript)< INVARIANT > TOKEN :{  < ALLCHARS: ~["\n"]>| < INVNEWLINE : "\n">}
+< DEFAULT > SKIP : /*Skip*/{  " "| "\r"| "\t"}<  DEFAULT > TOKEN:
+{
+	< PARAM : ( ";" )>
+}
+<  DEFAULT > TOKEN:
+{
+  < EQUALS : "=">
+| < ISENTER : < CONSTANT > ".io.enter" >
+| < ISEXIT : < CONSTANT >  ".io.exit">
+| < OBCT : "(" >
+| < CBCT : ")" >| < NEWLINE : "\n" >
+}< DEFAULT > TOKEN:{  < PACKAGENAME : < CODENAME > "." >| < CODENAME   : (< LETTER > | < DIGIT > | "$" | "_")+ >| < #LETTER     : [ "a"-"z" ] | [ "A"-"Z" ] >}
+
+< DEFAULT > TOKEN : /* Number Token*/{  < CONSTANT : (< DIGIT >)+ >| < #DIGIT : [ "0"-"9" ] >}HashMap<String, EventInvariant > parse_models() :{	Token t;	HashMap<String, EventInvariant > methodsCaptured = new HashMap<String, EventInvariant>();	String eventName;	String parameters;	String entryOrExit;	Type eventType;	EventInvariant tempInv;}{  (    	{    	  eventName = "";    	  tempInv = new EventInvariant();    	}    		 	(		  t = <PACKAGENAME > {eventName += t.toString(); }		)*		 t = < CODENAME > {eventName +=t.toString(); tempInv.setEvent(eventName);}		parameters = get_parameters(tempInv) {tempInv.setArguments(parameters); }		< EQUALS >		(		  t = < ISENTER > {entryOrExit = t.toString();tempInv.setType(Type.ENTER);}		| t = < ISEXIT > {entryOrExit = t.toString();tempInv.setType(Type.EXIT);}		)		< NEWLINE>		{		  //System.out.println(eventName+parameters+"="+entryOrExit);          methodsCaptured.put(entryOrExit.replace(".io.enter", "").replace(".io.exit", ""),tempInv);		}	)+	{	  return methodsCaptured;	}}String get_parameters(EventInvariant evntInv):{  	Token t;	String param;	String temp;}
+{	<  OBCT > { param = "(";}		(		 { temp = "";}		 (		   (temp = get_parameters(evntInv) { param += temp;})		| ((t = < PACKAGENAME > { temp += t.toString();})* t = < CODENAME > {temp += t.toString(); } ( t = < PARAM > { temp += t.toString();})? {param += temp; evntInv.addParameter(temp);})		)		)*	< CBCT > { param += ")"; }{  return param;}  	
+//	< OBCT > {param = "(";}
+//	(
+//	  (temp = get_parameters() {param+=temp; })
+//	| (t = < PACKAGENAME>{param+= t.toString(); } | t = < CODENAME > {param+= t.toString(); }| t = < PARAM >{param+= t.toString(); }) 
+//	)*
+//	< CBCT >
+//	{
+//	  return param+")";
+//	}
+}
+EventInvariant parse_invariants(EventInvariant evntInv):{	Token t;	String invariant;	ArrayList<Invariant> invariantList = new ArrayList<Invariant>();	EventInvariant evnt = evntInv;	token_source.SwitchTo(INVARIANT);}{	(	  {invariant = "";}	  (	  	t = < ALLCHARS > {invariant+=t.toString(); }	  )*	  < INVNEWLINE >	  {	    invariantList.add(new Invariant(invariant));	  }	)*	{	  evnt.setInvariantList(invariantList);	  return evnt;	  	}}
